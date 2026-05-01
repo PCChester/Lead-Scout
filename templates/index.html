@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LeadScout</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/main.css" />
+</head>
+<body>
+
+  <header>
+    <div class="header-inner">
+      <p class="logo-text">LeadScout</p>
+      <p class="logo-sub">AI adoption signal detector</p>
+    </div>
+  </header>
+
+  <main>
+    <section class="controls">
+      <select id="industry">
+        <option value="">All Industries</option>
+        <option value="Healthcare">Healthcare</option>
+        <option value="Finance & Banking">Finance &amp; Banking</option>
+        <option value="Retail & E-commerce">Retail &amp; E-commerce</option>
+        <option value="Manufacturing">Manufacturing</option>
+        <option value="Education">Education</option>
+        <option value="HR & People Ops">HR &amp; People Ops</option>
+        <option value="Legal">Legal</option>
+        <option value="Marketing & Media">Marketing &amp; Media</option>
+        <option value="Logistics & Supply Chain">Logistics &amp; Supply Chain</option>
+      </select>
+
+      <select id="region">
+        <option value="">All Regions</option>
+        <option value="EU Remote">EU Remote</option>
+        <option value="US Remote">US Remote</option>
+        <option value="Valencia (In-person)">Valencia (In-person)</option>
+        <option value="Spain Remote">Spain Remote</option>
+      </select>
+
+      <button id="btn-scout">Scout</button>
+    </section>
+
+    <div id="status-bar" class="status-bar hidden">
+      <span class="status-dot"></span>
+      <span id="status-text"></span>
+    </div>
+
+    <div id="results-grid" class="results-grid"></div>
+
+    <div id="empty-state" class="empty-state">
+      <p>Select an industry and region, then click <strong>Scout</strong>.</p>
+    </div>
+  </main>
+
+  <!-- ── Card template ─────────────────────────────────────────────── -->
+  <template id="card-tpl">
+    <article class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <h3 class="company-name"></h3>
+          <a class="company-domain" href="#" target="_blank" rel="noopener noreferrer"></a>
+        </div>
+        <div class="card-badges">
+          <span class="badge score-badge"></span>
+          <span class="badge region-badge"></span>
+        </div>
+        <button class="btn-dismiss" aria-label="Dismiss lead">✕</button>
+      </div>
+
+      <p class="fit-reason"></p>
+
+      <ul class="signals"></ul>
+
+      <details class="lead-details">
+        <summary>Contact &amp; draft email</summary>
+
+        <div class="contact-block">
+          <span class="contact-name"></span>
+          <span class="contact-role"></span>
+          <a class="contact-email" href="#"></a>
+        </div>
+
+        <div class="draft-block">
+          <pre class="email-draft"></pre>
+          <button class="btn-copy">Copy</button>
+        </div>
+      </details>
+    </article>
+  </template>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>
