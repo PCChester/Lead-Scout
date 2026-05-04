@@ -10,6 +10,7 @@
 
   let source    = null;
   let streamDone = false;
+  let maxCards  = 10;
 
   // ── Scout button ──────────────────────────────────────────────────────
   btnScout.addEventListener('click', () => {
@@ -31,7 +32,7 @@
       region:   selRegion.value,
     });
 
-    source = new EventSource(`/search?${params}`);
+    source = new EventSource(`/search?${params}&max_cards=${maxCards}`);
 
     // ── Event handlers ──────────────────────────────────────────────────
 
@@ -69,6 +70,14 @@
     };
   });
 
+  document.querySelectorAll('.btn-max-cards').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.btn-max-cards').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      maxCards = parseInt(btn.dataset.value);
+    });
+  });
+
   function finish() {
     if (source) { source.close(); source = null; }
     btnScout.disabled = false;
@@ -93,6 +102,11 @@
     // Badges
     card.querySelector('.score-badge').textContent  = `${score}/10`;
     card.querySelector('.region-badge').textContent = data.region ?? '';
+    const typeBadge = card.querySelector('.type-badge');
+    const companyType = data.company_type || 'client';
+    const typeLabels = { client: 'Client', competitor: 'Competitor', employer: 'Employer' };
+    typeBadge.textContent = typeLabels[companyType] || 'Client';
+    typeBadge.classList.add(companyType);
 
     // Fit reason
     card.querySelector('.fit-reason').textContent = data.fit_reason ?? '';

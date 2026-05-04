@@ -50,6 +50,13 @@ def score_company(company: dict) -> dict:
             f"Website content for {company['domain']}:\n\n{text}\n\n"
             "Analyse this website content and score this company as a potential client for Chris, "
             "an AI Adoption Trainer and Automation Specialist.\n\n"
+            "IMPORTANT: The website content may be in any language including Spanish, French, German, "
+            "Dutch, Italian or others. Identify AI adoption signals regardless of the language — "
+            "look for concepts like automation, artificial intelligence, digital transformation, "
+            "machine learning, and workflow tools in whatever language they appear. For example: "
+            "automatización, inteligencia artificial, transformación digital, aprendizaje automático "
+            "in Spanish. Location references may also appear in local form — Valencia, España, "
+            "Comunitat Valenciana, or Spain are all valid location signals.\n\n"
             "IMPORTANT SCORING RULES:\n"
             "- Score HIGH (7-10) only if the company is a real business that appears to be actively "
             "adopting, deploying, or investing in AI tools internally\n"
@@ -57,9 +64,21 @@ def score_company(company: dict) -> dict:
             "publisher, AI news site, or any site that writes ABOUT AI but doesn't USE it as a business\n"
             "- Score MEDIUM (5-6) if uncertain but there are weak signals of internal AI adoption\n\n"
             "Also add a \"disqualify\" boolean to your JSON — set it true if the company is a "
-            "conference, event organiser, market research firm, news aggregator, or job board.\n\n"
+            "conference, event organiser, market research firm, news aggregator, job board, "
+            "or a large multinational enterprise with more than 500 employees (for example major "
+            "banks like Santander, BBVA, Deutsche Bank, or any globally recognised financial "
+            "institution). Small fintech startups, scale-ups, and independent investment or "
+            "advisory firms should NOT be disqualified.\n\n"
+            "Also add a \"company_type\" field to your JSON. Set it to one of three values:\n"
+            "- \"competitor\" if the company sells AI consulting, automation consulting, AI adoption "
+            "training, or digital transformation services as their core business (i.e. they do what "
+            "Chris does, for clients)\n"
+            "- \"client\" if the company is a real business actively adopting AI internally and could "
+            "benefit from Chris's training and automation services\n"
+            "- \"employer\" if the company is in a relevant industry and might need someone with "
+            "Chris's skills as a team member but does not obviously need external training\n\n"
             "Return ONLY valid JSON with keys: score (int), signals (list of strings, max 5), "
-            "fit_reason (string), disqualify (boolean)"
+            "fit_reason (string), disqualify (boolean), company_type (string)"
         )
 
         client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
@@ -78,9 +97,10 @@ def score_company(company: dict) -> dict:
 
         return {
             **company,
-            "score":      score,
-            "signals":    result.get("signals", []),
-            "fit_reason": result.get("fit_reason", ""),
+            "score":        score,
+            "signals":      result.get("signals", []),
+            "fit_reason":   result.get("fit_reason", ""),
+            "company_type": result.get("company_type", "client"),
         }
 
     except Exception:

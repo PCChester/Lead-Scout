@@ -24,13 +24,17 @@ def index():
 
 @app.route("/search")
 def search():
-    industry = request.args.get("industry", "")
-    region   = request.args.get("region", "")
+    industry   = request.args.get("industry", "")
+    region     = request.args.get("region", "")
+    max_cards  = int(request.args.get("max_cards", 10))
 
     def generate():
+        cards_emitted = 0
         try:
             yield _event("status", {"text": "Starting discovery…"})
             for company in discover(industry, region):
+                if cards_emitted >= max_cards:
+                    break
                 name = company.get("name", "")
                 yield _event("status", {"text": f"Scoring {name}…"})
                 company = score_company(company)
@@ -50,8 +54,9 @@ def search():
                 company = draft_email(company)
 
                 yield _event("company", company)
+                cards_emitted += 1
 
-            yield _event("done", {"text": "Scan complete."})
+            yield _event("done", {"text": f"Scan complete. {cards_emitted} lead{'s' if cards_emitted != 1 else ''} found."})
 
         except NotImplementedError:
             yield _event("error", {"text": "Pipeline not yet implemented."})

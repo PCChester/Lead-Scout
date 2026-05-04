@@ -15,7 +15,7 @@ def _get_client() -> TavilyClient:
 _REGION_LABEL = {
     "EU Remote":            "Europe",
     "US Remote":            "United States",
-    "Valencia (In-person)": "Valencia Spain",
+    "Valencia (In-person)": "Valencia España",
     "Spain Remote":         "Spain",
 }
 
@@ -38,6 +38,20 @@ def _build_queries(industry: str, region: str) -> list[str]:
     def _q(*parts) -> str:
         tokens = [p for p in parts if p]
         return " ".join(tokens) + " " + _NEGATIVE_TERMS
+
+    if industry in ("Fintech", "Finance & Banking"):
+        return [
+            _q("fintech startup SME AI automation", reg, "2024"),
+            _q("fintech scaleup AI tools payments lending", reg),
+            _q("financial services SME AI adoption digital transformation", reg),
+        ]
+
+    if reg in ("Valencia España", "Spain", "España"):
+        return [
+            _q(ind, "empresa automatización inteligencia artificial Valencia España", "2024"),
+            _q(ind, "empresa transformación digital IA herramientas", reg),
+            _q(ind, "company AI automation digital transformation", reg),
+        ]
 
     return [
         _q(ind, "company AI automation strategy", reg, "2024"),
