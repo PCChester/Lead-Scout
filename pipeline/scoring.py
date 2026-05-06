@@ -58,17 +58,29 @@ def score_company(company: dict) -> dict:
             "in Spanish. Location references may also appear in local form — Valencia, España, "
             "Comunitat Valenciana, or Spain are all valid location signals.\n\n"
             "IMPORTANT SCORING RULES:\n"
-            "- Score HIGH (7-10) only if the company is a real business that appears to be actively "
-            "adopting, deploying, or investing in AI tools internally\n"
+            "- Score HIGH (7-10) only if AI adoption or the target industry is CENTRAL to what "
+            "the company actually does day-to-day — not just listed as one of many service areas\n"
             "- Score LOW (1-4) if the company is: a conference, event, job board, market research "
-            "publisher, AI news site, or any site that writes ABOUT AI but doesn't USE it as a business\n"
+            "publisher, AI news site, or any site that writes ABOUT AI but doesn't USE it as a "
+            "business — AND if the company's primary business is broad consultancy, government "
+            "services, investment, or a general holding group where AI or the target sector is "
+            "merely one of many areas they touch. Explain this clearly in fit_reason.\n"
             "- Score MEDIUM (5-6) if uncertain but there are weak signals of internal AI adoption\n\n"
             "Also add a \"disqualify\" boolean to your JSON — set it true if the company is a "
-            "conference, event organiser, market research firm, news aggregator, job board, "
-            "or a large multinational enterprise with more than 500 employees (for example major "
-            "banks like Santander, BBVA, Deutsche Bank, or any globally recognised financial "
-            "institution). Small fintech startups, scale-ups, and independent investment or "
-            "advisory firms should NOT be disqualified.\n\n"
+            "conference, event organiser, market research firm, news aggregator, or job board. "
+            "Small fintech startups, scale-ups, and independent investment or advisory firms "
+            "should NOT be disqualified.\n\n"
+            "Also add a \"headcount_estimate\" field. Infer approximate company size from cues "
+            "in the website content — explicit headcount or staff numbers, number of offices or "
+            "locations, \"enterprise\" or \"Fortune 500\" self-description, customer scale, or "
+            "similar signals. Set it to one of: \"under_500\", \"500_to_1000\", \"over_1000\", "
+            "or \"unknown\" if there are no clear signals.\n\n"
+            "Also add an \"is_competitor\" boolean. Set it to true if the company already offers "
+            "AI adoption training, AI literacy programs, or change management consulting around AI "
+            "as a CORE service — meaning this is central to their business, not a peripheral "
+            "offering. When is_competitor is true, do NOT disqualify the company. Instead, set "
+            "fit_reason to something like: \"Already operates in this space — potential employer "
+            "or partner rather than client.\"\n\n"
             "Also add a \"company_type\" field to your JSON. Set it to one of three values:\n"
             "- \"competitor\" if the company sells AI consulting, automation consulting, AI adoption "
             "training, or digital transformation services as their core business (i.e. they do what "
@@ -77,8 +89,16 @@ def score_company(company: dict) -> dict:
             "benefit from Chris's training and automation services\n"
             "- \"employer\" if the company is in a relevant industry and might need someone with "
             "Chris's skills as a team member but does not obviously need external training\n\n"
+            "Also detect the primary language of the website content and set \"website_language\" "
+            "to \"spanish\", \"german\", or \"english\" (use \"english\" as the default for any "
+            "other language).\n\n"
+            "Also set \"industry\" to a short label describing the company's core business — "
+            "for example: \"retail\", \"manufacturing\", \"fintech\", \"logistics\", \"healthcare\", "
+            "\"education\", \"real estate\", \"hospitality\", \"legal\", \"consulting\".\n\n"
             "Return ONLY valid JSON with keys: score (int), signals (list of strings, max 5), "
-            "fit_reason (string), disqualify (boolean), company_type (string)"
+            "fit_reason (string), disqualify (boolean), headcount_estimate (string), "
+            "is_competitor (boolean), company_type (string), website_language (string), "
+            "industry (string)"
         )
 
         client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
@@ -93,14 +113,42 @@ def score_company(company: dict) -> dict:
         raw = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw)
         result = json.loads(raw)
 
-        score = 0 if result.get("disqualify") else int(result.get("score", 0))
+        headcount     = result.get("headcount_estimate", "unknown")
+        is_competitor = result.get("is_competitor", False)
+        detected_ind  = result.get("industry", "").lower()
+
+        # 6c: Finance & Banking hard reject at enterprise scale
+        finance_keywords = ("bank", "insurance", "financial services", "asset management")
+        is_large_finance  = (
+            any(kw in detected_ind for kw in finance_keywords)
+            and headcount in ("500_to_1000", "over_1000")
+            and "fintech" not in detected_ind
+        )
+
+        disqualify = (
+            result.get("disqualify", False)
+            or (headcount == "over_1000" and not is_competitor)
+            or is_large_finance
+        )
+
+        raw_score = int(result.get("score", 0))
+        if disqualify:
+            score = 0
+        elif headcount == "500_to_1000":
+            score = max(0, raw_score - 2)
+        else:
+            score = raw_score
 
         return {
             **company,
-            "score":        score,
-            "signals":      result.get("signals", []),
-            "fit_reason":   result.get("fit_reason", ""),
-            "company_type": result.get("company_type", "client"),
+            "score":              score,
+            "signals":            result.get("signals", []),
+            "fit_reason":         result.get("fit_reason", ""),
+            "company_type":       result.get("company_type", "client"),
+            "website_language":   result.get("website_language", "english"),
+            "industry":           result.get("industry", ""),
+            "headcount_estimate": headcount,
+            "is_competitor":      is_competitor,
         }
 
     except Exception:

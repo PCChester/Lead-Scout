@@ -83,6 +83,14 @@
     btnScout.disabled = false;
   }
 
+  // ── Derive email subject from draft body ──────────────────────────────
+  function draftSubject(draft, companyName) {
+    const lines = draft.split('\n').map(l => l.trim()).filter(l => l && !/^Hi[\s,]/.test(l));
+    const first = lines[0] ?? '';
+    const capped = first.length > 80 ? first.slice(0, 77) + '…' : first;
+    return capped || `AI Adoption Training — ${companyName}`;
+  }
+
   // ── Build card from template ──────────────────────────────────────────
   function buildCard(data) {
     const frag = cardTpl.content.cloneNode(true);
@@ -153,6 +161,20 @@
         }, 2000);
       });
     });
+
+    // Open email button — only when there is a real named contact with a direct email
+    const btnOpen     = card.querySelector('.btn-open-email');
+    const contactName  = contact.name  ?? '';
+    const contactEmail = contact.email ?? '';
+    const hasRealEmail = contactName
+      && contactEmail
+      && !contactEmail.includes('linkedin.com')
+      && !contactEmail.toLowerCase().startsWith('info@');
+    if (hasRealEmail) {
+      const subject = draftSubject(draft, data.name ?? '');
+      btnOpen.href = `mailto:${contactEmail}?subject=${encodeURIComponent(subject)}`;
+      btnOpen.removeAttribute('hidden');
+    }
 
     // Dismiss button
     card.querySelector('.btn-dismiss').addEventListener('click', () => {

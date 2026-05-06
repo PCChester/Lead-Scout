@@ -39,11 +39,39 @@ def _build_queries(industry: str, region: str) -> list[str]:
         tokens = [p for p in parts if p]
         return " ".join(tokens) + " " + _NEGATIVE_TERMS
 
-    if industry in ("Fintech", "Finance & Banking"):
+    if industry == "Fintech":
         return [
-            _q("fintech startup SME AI automation", reg, "2024"),
-            _q("fintech scaleup AI tools payments lending", reg),
-            _q("financial services SME AI adoption digital transformation", reg),
+            _q("fintech startup under 500 employees AI automation", reg, "2024"),
+            _q("payments digital banking regtech insurtech AI tools", reg),
+            _q("fintech scaleup AI adoption platform lending neobank", reg),
+        ]
+
+    if industry == "Finance & Banking":
+        return [
+            _q("financial services SME AI adoption digital transformation", reg, "2024"),
+            _q("investment advisory wealth management AI tools", reg),
+            _q("insurance asset management AI automation", reg),
+        ]
+
+    if industry == "Language & Communication Training":
+        return [
+            _q("corporate language school AI content delivery L&D", reg, "2024"),
+            _q("communication training provider AI tools e-learning", reg),
+            _q("language learning company AI automation blended learning", reg),
+        ]
+
+    if industry == "IT & AI Solutions":
+        return [
+            _q("IT consultancy AI solutions provider digital transformation", reg, "2024"),
+            _q("IT services company AI tools internal adoption", reg),
+            _q("technology consultancy AI implementation partner", reg),
+        ]
+
+    if industry == "Film & Production":
+        return [
+            _q("film production company AI tools content creation", reg, "2024"),
+            _q("video production studio AI automation post-production", reg),
+            _q("media production company AI workflow digital", reg),
         ]
 
     if reg in ("Valencia España", "Spain", "España"):
@@ -65,11 +93,12 @@ def _root_domain(url: str) -> str:
     return m.group(1).lower() if m else ""
 
 
-def _company_name(title: str, domain: str) -> str:
-    for sep in (" - ", " | ", " — ", " · "):
-        if sep in title:
-            return title.split(sep)[0].strip()
-    return domain.split(".")[0].replace("-", " ").title()
+def _name_from_domain(domain: str) -> str:
+    stem = domain.split(".")[0]          # "some-company" from "some-company.es"
+    words = stem.split("-")
+    if len(words) == 1 and len(stem) <= 5:
+        return stem.upper()              # ainia → AINIA, bbva → BBVA
+    return " ".join(w.capitalize() for w in words)  # some-company → Some Company
 
 
 def _is_aggregator(domain: str) -> bool:
@@ -102,7 +131,7 @@ def discover(industry: str, region: str):
                 continue
             seen.add(domain)
             yield {
-                "name":     _company_name(result.get("title", ""), domain),
+                "name":     _name_from_domain(domain),
                 "domain":   domain,
                 "industry": industry or "General",
                 "region":   region or "All Regions",
