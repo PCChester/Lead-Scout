@@ -1,6 +1,6 @@
 # Lead Scout
 
-An AI-powered lead generation pipeline that finds companies actively investing in AI, scores them for fit, tracks down a decision-maker, and drafts a personalised cold email — all in a single run. Results stream into the UI live as each company clears the pipeline.
+An AI-powered lead generation pipeline that finds companies actively sending signals of AI adoption, scores them for fit, tracks down a decision-maker, and drafts a personalised cold email — all in a single run. Results stream into the UI live as each company clears the pipeline.
 
 Built by an AI Adoption Trainer who got tired of manually searching LinkedIn.
 
