@@ -18,7 +18,7 @@ Each card shows the company name, domain, score, AI signals, a detected industry
 
 ### 1. Discovery — `pipeline/discovery.py`
 
-Tavily API searches for companies matching the selected industry and region using hand-tuned query sets. Each industry has three targeted queries — Spanish/Valencia-region searches run in Spanish. Job boards, aggregator domains, and recruitment sites are filtered out before anything reaches the scoring stage. Companies are deduplicated by root domain, and display names are derived from the domain (not the page title).
+Tavily API searches for companies matching the selected industry and region using hand-tuned query sets. Each industry has four targeted queries — the fourth targets case studies and press coverage to surface real adoption evidence. Spanish/Valencia-region searches run in Spanish. Tavily returns up to 20 results per query. Job boards, aggregator domains, and recruitment sites are filtered out before anything reaches the scoring stage. Companies are deduplicated by root domain, and display names are derived from the domain (not the page title).
 
 ### 2. Scoring — `pipeline/scoring.py`
 
@@ -41,7 +41,11 @@ Checks the scored company against a regional and role filter. Flags companies th
 
 ### 4. Contact Discovery — `pipeline/contact.py`
 
-Hunter.io domain search finds the best available decision-maker email — prioritising Head of People, HR Director, L&D, CTO, and similar titles. Results containing `linkedin.com` are rejected. Generic `info@` addresses are surfaced but flagged in the UI.
+Hunter.io domain search finds the best available decision-maker 
+email — prioritising AI, technology, and people leadership titles.
+Results containing `linkedin.com` are rejected. 
+If the API returns nothing useful, `info@domain` is surfaced as 
+a last resort. Named contacts not publicly listed on company websites are best found via a manual LinkedIn lookup.
 
 ### 5. Email Drafting — `pipeline/email_draft.py`
 
@@ -119,10 +123,11 @@ pip install -r requirements.txt
 ANTHROPIC_API_KEY=your_anthropic_key
 TAVILY_API_KEY=your_tavily_key
 HUNTER_API_KEY=your_hunter_key
+FLASK_SECRET_KEY=your_flask_secret_key
 ```
 
-All three keys are required. Anthropic and Tavily both have free tiers sufficient for testing. Hunter.io offers 25 free searches per month.
-
+Anthropic and Tavily both have free tiers sufficient for testing. Hunter.io offers 25 free searches per month. For `FLASK_SECRET_KEY`, any long random string will do.
+```
 ### 4. Run the app
 
 ```bash

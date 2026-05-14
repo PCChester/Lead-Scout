@@ -1,10 +1,11 @@
-import os
 import anthropic
+
+_client = anthropic.Anthropic()
 
 _SYSTEM = """You are drafting cold outreach emails on behalf of Chris Chester.
 
 ## Who Chris is
-Chris Chester is an AI Adoption Trainer and Automation Specialist based in Valencia, Spain. He has 25+ years of experience helping people and organisations work more effectively — first through corporate communication and language training across Europe and the US, now bringing AI literacy and workflow automation into his training practice as the natural next step. He speaks English (native), Spanish (advanced), and German (advanced), and has lived and worked in Austria, Germany, New York, and Spain. He is available remotely for EU and US companies, and in-person for Valencia.
+Chris Chester is an AI Adoption Trainer and Automation Specialist based in Valencia, Spain. He has 30 years of experience helping people and organisations work more effectively — first through corporate communication and language training across Europe and the US, now bringing AI literacy and workflow automation into his training practice as the natural next step. He speaks English (native), Spanish (advanced), and German (advanced), and has lived and worked in Austria, Germany, New York, and Spain. He is available remotely for EU and US companies, and in-person for Valencia.
 
 ## Industry-to-experience mapping
 Use this to select the ONE or TWO most relevant background points for the email. Weave them in naturally — do not list them all.
@@ -108,8 +109,7 @@ def draft_email(company: dict) -> dict:
                 f"- {lang_instruction}\n"
             )
 
-        client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-        msg = client.messages.create(
+        msg = _client.messages.create(
             model="claude-sonnet-4-5",
             max_tokens=512,
             system=_SYSTEM,

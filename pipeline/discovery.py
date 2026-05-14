@@ -44,6 +44,7 @@ def _build_queries(industry: str, region: str) -> list[str]:
             _q("fintech startup under 500 employees AI automation", reg, "2024"),
             _q("payments digital banking regtech insurtech AI tools", reg),
             _q("fintech scaleup AI adoption platform lending neobank", reg),
+            _q("fintech company AI adoption case study press release", reg),
         ]
 
     if industry == "Finance & Banking":
@@ -51,6 +52,7 @@ def _build_queries(industry: str, region: str) -> list[str]:
             _q("financial services SME AI adoption digital transformation", reg, "2024"),
             _q("investment advisory wealth management AI tools", reg),
             _q("insurance asset management AI automation", reg),
+            _q("financial services AI adoption case study press release", reg),
         ]
 
     if industry == "Language & Communication Training":
@@ -58,6 +60,7 @@ def _build_queries(industry: str, region: str) -> list[str]:
             _q("corporate language school AI content delivery L&D", reg, "2024"),
             _q("communication training provider AI tools e-learning", reg),
             _q("language learning company AI automation blended learning", reg),
+            _q("language training company AI adoption case study press release", reg),
         ]
 
     if industry == "IT & AI Solutions":
@@ -65,6 +68,7 @@ def _build_queries(industry: str, region: str) -> list[str]:
             _q("IT consultancy AI solutions provider digital transformation", reg, "2024"),
             _q("IT services company AI tools internal adoption", reg),
             _q("technology consultancy AI implementation partner", reg),
+            _q("IT company AI adoption case study press release", reg),
         ]
 
     if industry == "Film & Production":
@@ -72,6 +76,7 @@ def _build_queries(industry: str, region: str) -> list[str]:
             _q("film production company AI tools content creation", reg, "2024"),
             _q("video production studio AI automation post-production", reg),
             _q("media production company AI workflow digital", reg),
+            _q("film production AI adoption case study press release", reg),
         ]
 
     if reg in ("Valencia España", "Spain", "España"):
@@ -79,14 +84,15 @@ def _build_queries(industry: str, region: str) -> list[str]:
             _q(ind, "empresa automatización inteligencia artificial Valencia España", "2024"),
             _q(ind, "empresa transformación digital IA herramientas", reg),
             _q(ind, "company AI automation digital transformation", reg),
+            _q(ind, "empresa IA caso de éxito transformación digital", reg),
         ]
 
     return [
         _q(ind, "company AI automation strategy", reg, "2024"),
         _q(ind, "company deploying AI tools employees", reg),
         _q(ind, "business AI adoption digital transformation", reg, "case study"),
+        _q(ind, "company AI adoption case study press release", reg),
     ]
-
 
 def _root_domain(url: str) -> str:
     m = re.search(r"https?://(?:www\.)?([^/?#]+)", url)
@@ -120,11 +126,16 @@ def discover(industry: str, region: str):
 
     seen: set[str] = set()
     for query in queries:
-        response = client.search(
-            query=query,
-            max_results=10,
-            search_depth="basic",
-        )
+        try:
+            response = client.search(
+                query=query,
+                max_results=20,
+                search_depth="basic",
+            )
+        except Exception as e:
+            print(f"[Discovery] Tavily query failed: {query!r} — {e}")
+            continue
+
         for result in response.get("results", []):
             domain = _root_domain(result.get("url", ""))
             if not domain or domain in seen or _is_aggregator(domain):

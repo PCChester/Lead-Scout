@@ -112,10 +112,12 @@ If no job posting, classify as "Proactive outreach candidate".
 
 ### Stage 4 — Contact Discovery (pipeline/contact.py)
 
-Uses Hunter.io Domain Search API.
-Preferred titles (in order): Head of People, HR Director,
-Head of Digital, CTO, Operations Director, CEO, then any result.
+Uses Hunter.io Domain Search API as primary source.
+Preferred titles (in order): Chief AI, Head of AI, CTO, CEO,
+Founder, Head of Product, and similar decision-maker titles.
 If email contains "linkedin.com" → reject, set email to None.
+If Hunter returns no named contact, falls back
+to info@domain as last resort.
 Returns: contact dict with name, title, email.
 
 ### Stage 5 — Email Draft (pipeline/email_draft.py)
@@ -176,9 +178,10 @@ All Regions, EU Remote, US Remote, Valencia (In-person), Spain Remote
 ## Known Limitations (to address in future sessions)
 
 - Card titles sometimes show page titles instead of company names
-  (Tavily returning article/page title rather than company name)
-- Hunter.io often returns generic info@ or Hiring Team contacts
-  rather than named decision-makers — coverage limitation
+- Hunter.io and Apollo.io coverage is thin for niche domains —
+  named decision-maker contacts often not publicly available
+- Manual LinkedIn lookup recommended as fallback for contact
+  discovery when both APIs return generic results
 - Occasional noise results still slip through despite disqualify flag
 
 ## Session Tracking
@@ -197,3 +200,16 @@ query targeting and scoring by industry/region combo.
 - Reject any Hunter.io result with linkedin.com in the email
 - Do not reuse v1 scraper logic
 - Do not switch back to Google Custom Search API
+
+## The Council — Pipeline Review System
+Three-agent review system for periodic pipeline health checks.
+Agent files and SOPs stored in project root (flat naming convention).
+
+| Agent | Role | Trigger |
+|---|---|---|
+| Ra | Architecture & strategy | Major changes, monthly |
+| Anubis | Code forensics & bugs | Known bugs, post-Ra |
+| Horus | Session log patterns | Every 5 sessions |
+
+Full process documented in COUNCIL_RUNBOOK.md.
+Ra always runs twice and findings are merged before passing to Anubis.

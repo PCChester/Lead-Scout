@@ -1,6 +1,6 @@
-import os
 import re
 import json
+import warnings
 import requests
 from bs4 import BeautifulSoup
 import anthropic
@@ -16,6 +16,8 @@ _HEADERS = {
 _TEXT_LIMIT = 3000
 
 _SYSTEM = "You are an AI readiness analyst. Analyse the website content and return ONLY valid JSON."
+
+_client = anthropic.Anthropic()
 
 
 def fetch_website_text(domain: str) -> str:
@@ -44,7 +46,17 @@ def score_company(company: dict) -> dict:
     try:
         text = fetch_website_text(company["domain"])
         if not text.strip():
-            return {**company, "score": 0, "signals": [], "fit_reason": ""}
+            return {
+                **company,
+                "score": 0,
+                "signals": [],
+                "fit_reason": "",
+                "company_type": "client",
+                "website_language": "english",
+                "industry": "",
+                "headcount_estimate": "unknown",
+                "is_competitor": False,
+            }
 
         prompt = (
             f"Website content for {company['domain']}:\n\n{text}\n\n"
@@ -101,8 +113,7 @@ def score_company(company: dict) -> dict:
             "industry (string)"
         )
 
-        client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
-        msg = client.messages.create(
+        msg = _client.messages.create(
             model="claude-sonnet-4-5",
             max_tokens=512,
             system=_SYSTEM,
@@ -112,6 +123,11 @@ def score_company(company: dict) -> dict:
         raw = msg.content[0].text.strip()
         raw = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw)
         result = json.loads(raw)
+
+        company_type = result.get("company_type", "client")
+        if company_type not in {"client", "employer", "competitor"}:
+            warnings.warn(f"Unexpected company_type '{company_type}' for {company.get('domain')} — defaulting to 'client'")
+            company_type = "client"
 
         headcount     = result.get("headcount_estimate", "unknown")
         is_competitor = result.get("is_competitor", False)
@@ -144,7 +160,7 @@ def score_company(company: dict) -> dict:
             "score":              score,
             "signals":            result.get("signals", []),
             "fit_reason":         result.get("fit_reason", ""),
-            "company_type":       result.get("company_type", "client"),
+            "company_type":       company_type,
             "website_language":   result.get("website_language", "english"),
             "industry":           result.get("industry", ""),
             "headcount_estimate": headcount,
@@ -152,4 +168,14 @@ def score_company(company: dict) -> dict:
         }
 
     except Exception:
-        return {**company, "score": 0, "signals": [], "fit_reason": ""}
+        return {
+            **company,
+            "score": 0,
+            "signals": [],
+            "fit_reason": "",
+            "company_type": "client",
+            "website_language": "english",
+            "industry": "",
+            "headcount_estimate": "unknown",
+            "is_competitor": False,
+        }
